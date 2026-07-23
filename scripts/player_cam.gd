@@ -2,8 +2,8 @@ extends Camera2D
 
 @export var move_speed: float = 500.0
 @export var zoom_speed: float = 0.1
-@export var min_zoom: float = 0.5
-@export var max_zoom: float = 3.0
+@export var min_zoom: float = 1.0
+@export var max_zoom: float = 10.0
 @export var zoom_smoothness: float = 8.0
 
 var target_zoom: Vector2
@@ -19,7 +19,6 @@ func _process(delta):
 		Input.get_axis("ui_up", "ui_down")
 	)
 
-	# Add WASD support if using default Input Map
 	if Input.is_key_pressed(KEY_A):
 		direction.x -= 1
 	if Input.is_key_pressed(KEY_D):
@@ -32,12 +31,10 @@ func _process(delta):
 	if direction.length() > 0:
 		position += direction.normalized() * move_speed * delta
 
-	# Smooth zoom
 	zoom = zoom.lerp(target_zoom, zoom_smoothness * delta)
 
 
 func _unhandled_input(event):
-	# Mouse wheel zoom (also commonly triggered by trackpads)
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			change_zoom(zoom_speed)
@@ -52,7 +49,7 @@ func _unhandled_input(event):
 	# Reset zoom
 	if event is InputEventKey:
 		if event.pressed and event.keycode == KEY_SPACE:
-			target_zoom = Vector2.ONE
+			target_zoom = Vector2.ONE + Vector2.ONE
 
 
 func change_zoom(amount: float):

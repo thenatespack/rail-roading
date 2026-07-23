@@ -1,0 +1,79 @@
+[gd_scene format=3 uid="uid://b2sjnxu8yw3ny"]
+
+[ext_resource type="Script" uid="uid://b2v7g4ve5fu84" path="res://scripts/hud.gd" id="1_ahhtf"]
+
+[sub_resource type="Theme" id="Theme_ahhtf"]
+Label/font_sizes/font_size = 32
+
+[node name="HUD" type="CanvasLayer" unique_id=415926885]
+script = ExtResource("1_ahhtf")
+
+[node name="Debug" type="Control" parent="." unique_id=1249309344]
+layout_mode = 3
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -250.0
+offset_bottom = 100.0
+grow_horizontal = 0
+theme = SubResource("Theme_ahhtf")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Debug" unique_id=1890030948]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="FPS" type="Label" parent="Debug/VBoxContainer" unique_id=1907625259]
+layout_mode = 2
+text = "FPS:"
+
+[node name="Ram_Usage" type="Label" parent="Debug/VBoxContainer" unique_id=1363083355]
+layout_mode = 2
+text = "RAM:"
+
+[node name="Control" type="Control" parent="." unique_id=276003443]
+layout_mode = 3
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -250.5
+offset_top = -100.0
+offset_right = 250.5
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Control" unique_id=1246266336]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="RoadsButton" type="Button" parent="Control/HBoxContainer" unique_id=603593274 groups=["DOT"]]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+text = "Roads"
+
+[node name="TracksButton" type="Button" parent="Control/HBoxContainer" unique_id=428552937 groups=["TA"]]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+text = "Tracks"
+
+[node name="TracksButton3" type="Button" parent="Control/HBoxContainer" unique_id=1749766453]
+visible = false
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+text = "Tracks"
+
+[node name="StationsButton" type="Button" parent="Control/HBoxContainer" unique_id=910544896 groups=["TA"]]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+text = "Stations"
+
+[connection signal="pressed" from="Control/HBoxContainer/RoadsButton" to="." method="_on_roads_button_pressed"]
+[connection signal="pressed" from="Control/HBoxContainer/TracksButton" to="." method="_on_tracks_button_pressed"]
+[connection signal="pressed" from="Control/HBoxContainer/StationsButton" to="." method="_on_stations_button_pressed"]

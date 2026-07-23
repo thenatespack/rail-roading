@@ -2,7 +2,9 @@
 
 [ext_resource type="Texture2D" uid="uid://cv0ptpjycmun7" path="res://assets/art/tiles2.png" id="1_errlg"]
 [ext_resource type="Script" uid="uid://bfwfy6hxb7ux7" path="res://scripts/test.gd" id="1_iyx0m"]
+[ext_resource type="PackedScene" uid="uid://b2sjnxu8yw3ny" path="res://scenes/hud.tscn" id="2_74lek"]
 [ext_resource type="Script" uid="uid://dbuu0cjihxves" path="res://scripts/player_cam.gd" id="2_bl13t"]
+[ext_resource type="Texture2D" uid="uid://bd7xlht3xjqju" path="res://assets/art/RoadsAndRailsSpriteSheet.png" id="4_j5jx5"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_bl13t"]
 texture = ExtResource("1_errlg")
@@ -26,10 +28,22 @@ texture = ExtResource("1_errlg")
 [sub_resource type="TileSet" id="TileSet_gdkyt"]
 sources/0 = SubResource("TileSetAtlasSource_bl13t")
 
-[node name="Test_World" type="Node2D" unique_id=84581027 node_paths=PackedStringArray("tile_map", "player")]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_lpvoh"]
+texture = ExtResource("4_j5jx5")
+0:0/0 = 0
+0:1/0 = 0
+0:2/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_74lek"]
+sources/0 = SubResource("TileSetAtlasSource_lpvoh")
+
+[node name="Test_World" type="Node2D" unique_id=84581027 node_paths=PackedStringArray("tile_map", "infrastructure_tilemap", "player")]
 script = ExtResource("1_iyx0m")
 tile_map = NodePath("Ground")
+infrastructure_tilemap = NodePath("Infastructure")
 player = NodePath("playerCam")
+
+[node name="HUD" parent="." unique_id=415926885 instance=ExtResource("2_74lek")]
 
 [node name="Ground" type="TileMapLayer" parent="." unique_id=1563595891]
 tile_set = SubResource("TileSet_gdkyt")
@@ -39,6 +53,10 @@ tile_set = SubResource("TileSet_gdkyt")
 [node name="Structures" type="TileMapLayer" parent="." unique_id=1232665113]
 
 [node name="Infastructure" type="TileMapLayer" parent="." unique_id=245553453]
+tile_set = SubResource("TileSet_74lek")
 
 [node name="playerCam" type="Camera2D" parent="." unique_id=592935089]
+zoom = Vector2(2, 2)
 script = ExtResource("2_bl13t")
+
+[connection signal="build_time" from="HUD" to="." method="_on_hud_build_time"]
