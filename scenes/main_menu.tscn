@@ -1,0 +1,57 @@
+[gd_scene format=3 uid="uid://c7f4xfmpkwb5t"]
+
+[ext_resource type="Script" uid="uid://8mr2pkaufj6q" path="res://scripts/main_menu.gd" id="1_l6cm7"]
+
+[sub_resource type="Theme" id="Theme_gdkyt"]
+Button/font_sizes/font_size = 32
+Label/font_sizes/font_size = 64
+
+[node name="MainMenu" type="Control" unique_id=1323533493]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_l6cm7")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=2086204994]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -46.0
+offset_top = -20.0
+offset_right = 46.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_gdkyt")
+
+[node name="Title" type="Label" parent="VBoxContainer" unique_id=1056923816]
+layout_mode = 2
+text = "Rail-Roading"
+
+[node name="StartButton" type="Button" parent="VBoxContainer" unique_id=1212285037]
+layout_mode = 2
+text = "Start"
+
+[node name="TutorialButton" type="Button" parent="VBoxContainer" unique_id=475568100]
+layout_mode = 2
+text = "Tutorial"
+
+[node name="SettingsButton" type="Button" parent="VBoxContainer" unique_id=1979553362]
+visible = false
+layout_mode = 2
+text = "Settings"
+
+[node name="QuitButton" type="Button" parent="VBoxContainer" unique_id=1335243948]
+layout_mode = 2
+text = "Quit"
+
+[connection signal="pressed" from="VBoxContainer/StartButton" to="." method="_on_start_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/TutorialButton" to="." method="_on_tutorial_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/SettingsButton" to="." method="_on_settings_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/QuitButton" to="." method="_on_quit_button_pressed"]

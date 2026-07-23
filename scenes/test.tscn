@@ -1,0 +1,44 @@
+[gd_scene format=3 uid="uid://dlv7q5plcxlc7"]
+
+[ext_resource type="Texture2D" uid="uid://cv0ptpjycmun7" path="res://assets/art/tiles2.png" id="1_errlg"]
+[ext_resource type="Script" uid="uid://bfwfy6hxb7ux7" path="res://scripts/test.gd" id="1_iyx0m"]
+[ext_resource type="Script" uid="uid://dbuu0cjihxves" path="res://scripts/player_cam.gd" id="2_bl13t"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_bl13t"]
+texture = ExtResource("1_errlg")
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+0:2/0 = 0
+1:2/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_gdkyt"]
+sources/0 = SubResource("TileSetAtlasSource_bl13t")
+
+[node name="Test_World" type="Node2D" unique_id=84581027 node_paths=PackedStringArray("tile_map", "player")]
+script = ExtResource("1_iyx0m")
+tile_map = NodePath("Ground")
+player = NodePath("playerCam")
+
+[node name="Ground" type="TileMapLayer" parent="." unique_id=1563595891]
+tile_set = SubResource("TileSet_gdkyt")
+
+[node name="Enviromental" type="TileMapLayer" parent="." unique_id=1841535565]
+
+[node name="Structures" type="TileMapLayer" parent="." unique_id=1232665113]
+
+[node name="Infastructure" type="TileMapLayer" parent="." unique_id=245553453]
+
+[node name="playerCam" type="Camera2D" parent="." unique_id=592935089]
+script = ExtResource("2_bl13t")
