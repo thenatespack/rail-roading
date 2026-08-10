@@ -23,6 +23,10 @@ layout_mode = 0
 offset_right = 40.0
 offset_bottom = 40.0
 
+[node name="Money" type="Label" parent="Debug/VBoxContainer" unique_id=540560265]
+layout_mode = 2
+text = "Money:"
+
 [node name="FPS" type="Label" parent="Debug/VBoxContainer" unique_id=1907625259]
 layout_mode = 2
 text = "FPS:"

@@ -5,6 +5,9 @@ extends Camera2D
 @export var min_zoom: float = 1.0
 @export var max_zoom: float = 10.0
 @export var zoom_smoothness: float = 8.0
+var money: float = 100.0
+
+signal display_settings
 
 var target_zoom: Vector2
 
@@ -50,6 +53,8 @@ func _unhandled_input(event):
 	if event is InputEventKey:
 		if event.pressed and event.keycode == KEY_SPACE:
 			target_zoom = Vector2.ONE + Vector2.ONE
+		elif event.pressed and event.keycode == KEY_ESCAPE:
+			emit_signal("display_settings")
 
 
 func change_zoom(amount: float):

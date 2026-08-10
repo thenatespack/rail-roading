@@ -4,7 +4,34 @@
 [ext_resource type="Script" uid="uid://bfwfy6hxb7ux7" path="res://scripts/test.gd" id="1_iyx0m"]
 [ext_resource type="PackedScene" uid="uid://b2sjnxu8yw3ny" path="res://scenes/hud.tscn" id="2_74lek"]
 [ext_resource type="Script" uid="uid://dbuu0cjihxves" path="res://scripts/player_cam.gd" id="2_bl13t"]
+[ext_resource type="Script" uid="uid://cuprhdcrlqn36" path="res://scripts/city_marker.gd" id="2_uacia"]
+[ext_resource type="Script" uid="uid://tp8vv7if8qec" path="res://scripts/in_game_settings_popup.gd" id="3_lpvoh"]
+[ext_resource type="Shader" uid="uid://duci8tskkq5hy" path="res://city_circle.gdshader" id="3_yk7ts"]
 [ext_resource type="Texture2D" uid="uid://bd7xlht3xjqju" path="res://assets/art/RoadsAndRailsSpriteSheet.png" id="4_j5jx5"]
+[ext_resource type="Texture2D" uid="uid://dloilakhuxndj" path="res://assets/art/pixil-frame-0.png" id="6_jcd4p"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_gdkyt"]
+shader = ExtResource("3_yk7ts")
+shader_parameter/heart_radius = 0.1
+shader_parameter/heart_color = Color(1, 0.2, 0.2, 1)
+shader_parameter/influence_radius = 0.4
+shader_parameter/influence_color = Color(0.2, 0.5, 1, 0.5)
+shader_parameter/aa_width = 0.01
+
+[sub_resource type="PackedScene" id="PackedScene_ajshl"]
+_bundled = {
+"conn_count": 0,
+"conns": PackedInt32Array(),
+"editable_instances": [],
+"id_paths": [],
+"names": PackedStringArray("CityMarker", "script", "Node2D", "CircleVisual", "material", "anchors_preset", "anchor_left", "anchor_top", "anchor_right", "anchor_bottom", "offset_left", "offset_top", "offset_right", "offset_bottom", "grow_horizontal", "grow_vertical", "mouse_filter", "ColorRect", "NameLabel", "Label"),
+"node_count": 3,
+"node_ids": PackedInt32Array(765892303, 3414336, 999562814),
+"node_paths": [],
+"nodes": PackedInt32Array(-1, -1, 2, 0, -1, 1, 1, 0, 0, 0, 0, 17, 3, -1, 13, 4, 1, 5, 2, 6, 3, 7, 3, 8, 3, 9, 3, 10, 4, 11, 4, 12, 5, 13, 5, 14, 6, 15, 6, 16, 6, 0, 0, 0, 19, 18, -1, 11, 5, 2, 6, 3, 7, 3, 8, 3, 9, 3, 10, 7, 11, 8, 12, 9, 13, 10, 14, 6, 15, 6, 0),
+"variants": [ExtResource("2_uacia"), SubResource("ShaderMaterial_gdkyt"), 8, 0.5, -250.0, 250.0, 2, -20.0, -11.5, 20.0, 11.5],
+"version": 3
+}
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_bl13t"]
 texture = ExtResource("1_errlg")
@@ -28,22 +55,87 @@ texture = ExtResource("1_errlg")
 [sub_resource type="TileSet" id="TileSet_gdkyt"]
 sources/0 = SubResource("TileSetAtlasSource_bl13t")
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_uacia"]
+texture = ExtResource("6_jcd4p")
+
+[sub_resource type="TileSet" id="TileSet_k3o8w"]
+sources/0 = SubResource("TileSetAtlasSource_uacia")
+
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_lpvoh"]
 texture = ExtResource("4_j5jx5")
-0:0/0 = 0
 0:1/0 = 0
 0:2/0 = 0
 
 [sub_resource type="TileSet" id="TileSet_74lek"]
 sources/0 = SubResource("TileSetAtlasSource_lpvoh")
 
-[node name="Test_World" type="Node2D" unique_id=84581027 node_paths=PackedStringArray("tile_map", "infrastructure_tilemap", "player")]
+[node name="Test_World" type="Node2D" unique_id=84581027 node_paths=PackedStringArray("tile_map", "infrastructure_tilemap", "housing_tilemap", "player")]
 script = ExtResource("1_iyx0m")
 tile_map = NodePath("Ground")
 infrastructure_tilemap = NodePath("Infastructure")
+housing_tilemap = NodePath("Structures")
 player = NodePath("playerCam")
+city_marker_scene = SubResource("PackedScene_ajshl")
 
 [node name="HUD" parent="." unique_id=415926885 instance=ExtResource("2_74lek")]
+
+[node name="SettingsPopup" type="Control" parent="HUD" unique_id=144865954]
+process_mode = 2
+visible = false
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -125.0
+offset_top = -100.0
+offset_right = 125.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3_lpvoh")
+
+[node name="ColorRect" type="ColorRect" parent="HUD/SettingsPopup" unique_id=28680110]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -833.0
+offset_top = -446.0
+offset_right = 844.0
+offset_bottom = 438.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 1, 1, 0.72156864)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUD/SettingsPopup" unique_id=1794547820]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="HUD/SettingsPopup/VBoxContainer" unique_id=1423781819]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "Game Paused"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ResumeButton" type="Button" parent="HUD/SettingsPopup/VBoxContainer" unique_id=46235395]
+layout_mode = 2
+text = "Resume"
+
+[node name="MainMenu" type="Button" parent="HUD/SettingsPopup/VBoxContainer" unique_id=788951151]
+layout_mode = 2
+text = "Main Menu"
+
+[node name="QuitGame" type="Button" parent="HUD/SettingsPopup/VBoxContainer" unique_id=174040096]
+layout_mode = 2
+text = "Quit Game"
 
 [node name="Ground" type="TileMapLayer" parent="." unique_id=1563595891]
 tile_set = SubResource("TileSet_gdkyt")
@@ -51,6 +143,7 @@ tile_set = SubResource("TileSet_gdkyt")
 [node name="Enviromental" type="TileMapLayer" parent="." unique_id=1841535565]
 
 [node name="Structures" type="TileMapLayer" parent="." unique_id=1232665113]
+tile_set = SubResource("TileSet_k3o8w")
 
 [node name="Infastructure" type="TileMapLayer" parent="." unique_id=245553453]
 tile_set = SubResource("TileSet_74lek")
@@ -60,3 +153,7 @@ zoom = Vector2(2, 2)
 script = ExtResource("2_bl13t")
 
 [connection signal="build_time" from="HUD" to="." method="_on_hud_build_time"]
+[connection signal="pressed" from="HUD/SettingsPopup/VBoxContainer/ResumeButton" to="HUD/SettingsPopup" method="_on_resume_button_pressed"]
+[connection signal="pressed" from="HUD/SettingsPopup/VBoxContainer/MainMenu" to="HUD/SettingsPopup" method="_on_main_menu_pressed"]
+[connection signal="pressed" from="HUD/SettingsPopup/VBoxContainer/QuitGame" to="HUD/SettingsPopup" method="_on_quit_game_pressed"]
+[connection signal="display_settings" from="playerCam" to="." method="_on_player_cam_display_settings"]

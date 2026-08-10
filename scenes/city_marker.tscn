@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://cy5om0opjvwh3"]
+
+[ext_resource type="Script" uid="uid://cuprhdcrlqn36" path="res://scripts/city_marker.gd" id="1_k3o8w"]
+[ext_resource type="Shader" uid="uid://duci8tskkq5hy" path="res://city_circle.gdshader" id="2_5eqpx"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_gdkyt"]
+shader = ExtResource("2_5eqpx")
+shader_parameter/heart_radius = 0.1
+shader_parameter/heart_color = Color(1, 0.2, 0.2, 1)
+shader_parameter/influence_radius = 0.4
+shader_parameter/influence_color = Color(0.2, 0.5, 1, 0.5)
+shader_parameter/aa_width = 0.01
+
+[node name="CityMarker" type="Node2D" unique_id=765892303]
+script = ExtResource("1_k3o8w")
+
+[node name="CircleVisual" type="ColorRect" parent="." unique_id=3414336]
+material = SubResource("ShaderMaterial_gdkyt")
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -250.0
+offset_right = 250.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="NameLabel" type="Label" parent="." unique_id=999562814]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -11.5
+offset_right = 20.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2

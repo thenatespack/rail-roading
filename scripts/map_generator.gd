@@ -32,6 +32,8 @@ var elevation_noise := FastNoiseLite.new()
 var moisture_noise := FastNoiseLite.new()
 var temperature_noise := FastNoiseLite.new()
 
+# Typed array for safe tracking of active cities
+var active_cities: Array[City] = []
 
 func _init(size: Vector2i, map_seed: int) -> void:
 	chunk_size = size
@@ -54,16 +56,12 @@ func setup_noise() -> void:
 	temperature_noise.frequency = 0.015
 
 
-# PERFORMANCE: Returns a flattened 1D array instead of nested Arrays.
-# To access a tile at (x, y) in the chunk, use: map[x * chunk_size.y + y]
 func generate(player_position: Vector2i) -> PackedInt32Array:
 	var map := PackedInt32Array()
-	# Pre-allocating the array size is much faster than appending in a loop
 	map.resize(chunk_size.x * chunk_size.y)
 	
-	# Use integer division and variables to avoid casting every loop
-	var start_x: int = player_position.x - (chunk_size.x / 2.0)
-	var start_y: int = player_position.y - (chunk_size.y / 2.0)
+	var start_x: int = player_position.x - int(chunk_size.x / 2.0)
+	var start_y: int = player_position.y - int(chunk_size.y / 2.0)
 	
 	var index := 0
 	for x in range(chunk_size.x):
@@ -76,7 +74,7 @@ func generate(player_position: Vector2i) -> PackedInt32Array:
 	return map
 
 
-# BUG FIX: Integrated temperature noise to determine deserts vs grass
+# Integrated temperature noise to determine deserts vs grass
 func get_tile(world_x: int, world_y: int) -> TileType:
 	var elevation := get_elevation(world_x, world_y)
 	
@@ -97,7 +95,7 @@ func get_tile(world_x: int, world_y: int) -> TileType:
 	return TileType.GRASS
 
 
-# BUG FIX: Clamped the ocean strength to prevent infinite negative scaling
+# Clamped the ocean strength to prevent infinite negative scaling
 func get_elevation(x: int, y: int) -> float:
 	var value := elevation_noise.get_noise_2d(x, y)
 	var coast_mask := float(x) / 1000.0
@@ -113,26 +111,26 @@ func get_atlas_position(tile: TileType) -> Vector2i:
 	return TILE_ATLAS[tile]
 
 
-# PERFORMANCE/FLEXIBILITY: Passed a Rect2i bounds instead of magic numbers
 func get_cities(amount: int, bounds: Rect2i) -> Array[City]:
-	var cities: Array[City] = []
+	active_cities.clear()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	
 	var attempts := 0
 	var max_attempts := amount * 500
 	
-	while cities.size() < amount and attempts < max_attempts:
+	while active_cities.size() < amount and attempts < max_attempts:
 		attempts += 1
 		var x := rng.randi_range(bounds.position.x, bounds.end.x)
 		var y := rng.randi_range(bounds.position.y, bounds.end.y)
 		var position := Vector2i(x, y)
 		
-		if can_place_city(position, cities):
+		if can_place_city(position, active_cities):
 			var population := rng.randi_range(1000, 20000)
-			cities.append(City.new(position, population))
+			active_cities.append(City.new(position, population))
 			
-	return cities
+	print(active_cities)
+	return active_cities
 
 
 func can_place_city(pos: Vector2i, cities: Array[City]) -> bool:
@@ -141,15 +139,23 @@ func can_place_city(pos: Vector2i, cities: Array[City]) -> bool:
 		return false
 		
 	for city in cities:
-		# PERFORMANCE: distance_squared_to avoids the expensive square root calculation of distance_to
-		if city.position.distance_squared_to(pos) < 5625: # 75 squared
+		if city.position.distance_squared_to(pos) < 5625:
 			return false
 			
 	return true
 
 
-# BUG FIX: Renamed to match Godot snake_case conventions
 func cost_modifier(x: int, y: int) -> float:
+	var pos := Vector2i(x, y)
+	
+	# Prevent building inside the city's heart zone (matches shader radius logic)
+	for city in active_cities:
+		var pop_factor = clampf(float(city.population) / 20000.0, 0.0, 1.0)
+		var heart_radius_in_tiles = lerpf(0.8, 4.0, pop_factor)
+		
+		if pos.distance_to(city.position) <= heart_radius_in_tiles:
+			return 999.0 # Blocks building in the heart via BuildTool check
+			
 	var tile := get_tile(x, y)
 	
 	match tile:

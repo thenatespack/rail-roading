@@ -24,12 +24,14 @@ func filter_player_ui() -> void:
 		if node is CanvasItem:
 			node.visible = show_dot
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	var fps = Engine.get_frames_per_second();
 	$Debug/VBoxContainer/FPS.text ="FPS: "+ str(fps)
 	var max_memory = Performance.get_monitor(Performance.MEMORY_STATIC)
 	$Debug/VBoxContainer/Ram_Usage.text = "RAM: %.2f MB" % (max_memory / 1024.0 / 1024.0)
+
+func update_money(money: float):
+	$Debug/VBoxContainer/Money.text ="Money: $"+ str(money)
 
 
 func _on_roads_button_pressed() -> void:
