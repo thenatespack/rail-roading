@@ -45,6 +45,9 @@ const REFUND_RATIO := 0.1
 const ROAD_ATLAS_VERTICAL := Vector2i(0, 1)
 const ROAD_ATLAS_CORNER := Vector2i(1, 1)
 const ROAD_ATLAS_HORIZONTAL := Vector2i(2, 1)
+const ROAD_ATLAS_DIAGONAL := Vector2i(3, 1)
+const ROAD_ATLAS_INTERSECTION := Vector2i(4, 1)
+const ROAD_ATLAS_TJUNCTION := Vector2i(5, 1)
 const RAIL_ATLAS := Vector2i(0, 2)
 const STATION_ATLAS := Vector2i(0, 0)
 const TOLL_SOURCE := 1
@@ -56,6 +59,18 @@ const CORNER_ALT_EAST_SOUTH := 0
 const CORNER_ALT_WEST_SOUTH := 1
 const CORNER_ALT_EAST_NORTH := 2
 const CORNER_ALT_WEST_NORTH := 3
+
+# Diagonal road (3,1) base is "\" (NW-SE); alternative 1 is flip_h = "/" (NE-SW)
+const DIAGONAL_ALT_NW_SE := 0
+const DIAGONAL_ALT_NE_SW := 1
+
+# T-junction (5,1) base bar runs LEFT+RIGHT with the stem DOWN ({E,W,S}).
+# Alternatives use flip/transpose to cover all four 3-way orientations:
+# 0 = {E,W,S}, 2 = flip_v {E,W,N}, 4 = transpose {N,S,E}, 5 = transpose+flip_h {N,S,W}
+const T_ALT_EWS := 0
+const T_ALT_EWN := 2
+const T_ALT_NSE := 4
+const T_ALT_NSW := 5
 
 # Rail (0,2) base is vertical; alternative 4 is transpose (horizontal)
 const RAIL_ALT_VERTICAL := 0
@@ -208,7 +223,7 @@ func get_structure_at(tile_position: Vector2i) -> int:
 	if building_layer.get_cell_source_id(tile_position) == TOLL_SOURCE:
 		return Structure.TOLL
 	match building_layer.get_cell_atlas_coords(tile_position):
-		ROAD_ATLAS_VERTICAL, ROAD_ATLAS_CORNER, ROAD_ATLAS_HORIZONTAL:
+		ROAD_ATLAS_VERTICAL, ROAD_ATLAS_CORNER, ROAD_ATLAS_HORIZONTAL, ROAD_ATLAS_DIAGONAL, ROAD_ATLAS_INTERSECTION, ROAD_ATLAS_TJUNCTION:
 			return Structure.ROAD
 		RAIL_ATLAS:
 			return Structure.RAIL
@@ -232,6 +247,16 @@ func get_road_connections(tile_position: Vector2i, planned_tiles: Array) -> Arra
 	return connections
 
 
+# Returns the diagonal directions a road tile connects to, for 45° roads.
+func get_diagonal_connections(tile_position: Vector2i, planned_tiles: Array) -> Array[Vector2i]:
+	var connections: Array[Vector2i] = []
+	for direction: Vector2i in [Vector2i(-1, -1), Vector2i(1, -1), Vector2i(1, 1), Vector2i(-1, 1)]:
+		var neighbor := tile_position + direction
+		if planned_tiles.has(neighbor) or is_road(neighbor):
+			connections.append(direction)
+	return connections
+
+
 # Picks atlas coords + alternative for a road tile based on its connections.
 func get_road_data(tile_position: Vector2i, planned_tiles: Array) -> Dictionary:
 	var conns := get_road_connections(tile_position, planned_tiles)
@@ -239,6 +264,21 @@ func get_road_data(tile_position: Vector2i, planned_tiles: Array) -> Dictionary:
 	var down := conns.has(Vector2i.DOWN)
 	var left := conns.has(Vector2i.LEFT)
 	var right := conns.has(Vector2i.RIGHT)
+
+	# Four-way intersection when all directions connect
+	if up and down and left and right:
+		return {"atlas": ROAD_ATLAS_INTERSECTION, "alternative": 0}
+
+	# T-junction when exactly three directions connect
+	if (int(up) + int(down) + int(left) + int(right)) == 3:
+		if not up:
+			return {"atlas": ROAD_ATLAS_TJUNCTION, "alternative": T_ALT_EWS}
+		if not down:
+			return {"atlas": ROAD_ATLAS_TJUNCTION, "alternative": T_ALT_EWN}
+		if not left:
+			return {"atlas": ROAD_ATLAS_TJUNCTION, "alternative": T_ALT_NSE}
+		if not right:
+			return {"atlas": ROAD_ATLAS_TJUNCTION, "alternative": T_ALT_NSW}
 
 	if up and down:
 		return {"atlas": ROAD_ATLAS_VERTICAL, "alternative": 0}
@@ -254,6 +294,17 @@ func get_road_data(tile_position: Vector2i, planned_tiles: Array) -> Dictionary:
 		return {"atlas": ROAD_ATLAS_CORNER, "alternative": CORNER_ALT_EAST_NORTH}
 	if left and up:
 		return {"atlas": ROAD_ATLAS_CORNER, "alternative": CORNER_ALT_WEST_NORTH}
+
+	# Diagonal (45°) roads: base tile runs NW-SE ("\"), alternative 1 runs NE-SW ("/")
+	var diag := get_diagonal_connections(tile_position, planned_tiles)
+	var nw := diag.has(Vector2i(-1, -1))
+	var ne := diag.has(Vector2i(1, -1))
+	var sw := diag.has(Vector2i(-1, 1))
+	var se := diag.has(Vector2i(1, 1))
+	if nw and se:
+		return {"atlas": ROAD_ATLAS_DIAGONAL, "alternative": DIAGONAL_ALT_NW_SE}
+	if ne and sw:
+		return {"atlas": ROAD_ATLAS_DIAGONAL, "alternative": DIAGONAL_ALT_NE_SW}
 
 	# Dead end: point the straight toward the single connection
 	if up or down:
