@@ -30,6 +30,14 @@ var _game_minutes_of_day := TIME_START_HOUR * 60 + TIME_START_MINUTE
 var _game_day_index := (TIME_START_YEAR * DAYS_PER_YEAR) + (TIME_START_MONTH - 1) * DAYS_PER_MONTH + (TIME_START_DAY - 1)
 var _last_total_population := 0
 var _total_population := 0
+# Game-over tracking: a session lasts up to 10 real minutes of play time and
+# ends early if the treasury is emptied. Metrics are collected for the summary.
+var _play_time := 0.0
+var _game_over_shown := false
+var _money_was_positive := true
+var _highest_balance := 5000.0
+var _total_toll_income := 0.0
+var _total_maintenance_paid := 0.0
 const HOUSING_CHECK_INTERVAL := 10.0
 const BUILDING_SPAWN_CHANCE := 0.3
 const HOUSE_OFFSETS: Array[Vector2i] = [
@@ -49,7 +57,7 @@ const BUILDING_SOURCE := {
 	MapGenerator.ZoneType.INDUSTRIAL: [2, 5, 8],
 }
 # A city levels up when this fraction of its buildable zone tiles is filled.
-const LEVEL_UP_RATIO := 0.45
+const LEVEL_UP_RATIO := 0.65
 # Minimum seconds between level ups, so a city can't densify in one burst.
 const LEVEL_UP_COOLDOWN := 10.0
 # How many buildings densify per growth tick while a level-up is in progress.
@@ -60,8 +68,10 @@ const TOLL_RATE := 0.05
 # Road maintenance: every interval, each road tile costs its upkeep. More roads
 # (and upgraded gold roads) drive the upkeep cost up.
 const MAINTENANCE_INTERVAL := 2.0
-const ROAD_MAINTENANCE_COST := 0.05
-const GOLD_ROAD_MAINTENANCE_COST := 0.12
+const ROAD_MAINTENANCE_COST := 1
+const GOLD_ROAD_MAINTENANCE_COST := 2
+# A game session ends after this many real seconds (10 minutes) of play.
+const GAME_OVER_TIME_LIMIT := 600.0
 # In-game clock: starts at the date shown in the HUD and advances each growth
 # tick by TIME_STEP_MINUTES.
 const TIME_START_MONTH := 10
@@ -125,6 +135,18 @@ func screen_to_tile(screen_position: Vector2) -> Vector2i:
 
 
 func _process(delta: float) -> void:
+	_play_time += delta
+	if player and "money" in player:
+		_highest_balance = maxf(_highest_balance, player.money)
+	if _game_over_shown:
+		return
+	if _play_time >= GAME_OVER_TIME_LIMIT:
+		show_game_over("Time's up! You survived %d minutes." % int(GAME_OVER_TIME_LIMIT / 60.0))
+		return
+	if player and player.money < 0.0 and _money_was_positive:
+		show_game_over("Bankrupt! Your treasury ran dry.")
+		return
+	_money_was_positive = _money_was_positive or (player and player.money >= 0.0)
 	housing_timer += delta
 	if housing_timer >= HOUSING_CHECK_INTERVAL:
 		housing_timer = 0.0
@@ -387,6 +409,7 @@ func process_road_maintenance() -> void:
 		+ gold_road_count * GOLD_ROAD_MAINTENANCE_COST
 	if expense <= 0.0:
 		return
+	_total_maintenance_paid += expense
 	player.money -= expense
 	if hud:
 		hud.update_expenses(expense)
@@ -402,6 +425,7 @@ func process_tolls() -> void:
 	for toll: Vector2i in build_tool.toll_tiles:
 		total_traffic += calculate_toll_traffic(toll)
 	var income := total_traffic * TOLL_RATE
+	_total_toll_income += income
 	player.money += income
 	if hud:
 		hud.update_toll_income(income, total_traffic)
@@ -541,3 +565,64 @@ func _on_hud_build_time(building_type: int) -> void:
 func _on_player_cam_display_settings() -> void:
 	$HUD/SettingsPopup.visible = not $HUD/SettingsPopup.visible
 	get_tree().paused = not get_tree().paused
+
+
+func game_over_popup() -> Control:
+	return $HUD/GameOverPopup
+
+
+func show_game_over(reason: String) -> void:
+	_game_over_shown = true
+	get_tree().paused = true
+	var popup := game_over_popup()
+	if not popup:
+		return
+	popup.visible = true
+	popup.process_mode = Node.PROCESS_MODE_ALWAYS
+	if popup.has_node("%Reason"):
+		popup.get_node("%Reason").text = reason
+	if popup.has_node("%MetricsStats"):
+		var stats := [
+			"Time survived: %02d:%02d" % [int(_play_time / 60.0), int(_play_time) % 60],
+			"Peak balance: $%s" % format_money(_highest_balance),
+			"Toll income: $%s" % format_money(_total_toll_income),
+			"Maintenance paid: $%s" % format_money(_total_maintenance_paid),
+			"Population: %d" % _total_population,
+			"Roads built: %d" % count_struct(BuildTool.Structure.ROAD),
+			"Gold roads: %d" % count_struct(BuildTool.Structure.YELLOW_ROAD),
+		]
+		popup.get_node("%MetricsStats").text = "\n".join(stats)
+
+
+func count_struct(struct_type: int) -> int:
+	if not build_tool:
+		return 0
+	var count := 0
+	for tile in build_tool.road_tiles:
+		if build_tool.get_structure_at(tile) == struct_type:
+			count += 1
+	return count
+
+
+func format_money(value: float) -> String:
+	var s := str(int(value))
+	var out := ""
+	while s.length() > 3:
+		out = "," + s.right(3) + out
+		s = s.left(s.length() - 3)
+	return s + out
+
+
+func _on_game_over_continue() -> void:
+	get_tree().paused = false
+	var popup := game_over_popup()
+	if popup:
+		popup.visible = false
+		_game_over_shown = false
+		_play_time = 0.0
+		_money_was_positive = player.money >= 0.0
+
+
+func _on_game_over_main_menu() -> void:
+	get_tree().paused = false
+	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")

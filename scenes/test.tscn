@@ -8,6 +8,8 @@
 [ext_resource type="Script" uid="uid://tp8vv7if8qec" path="res://scripts/in_game_settings_popup.gd" id="3_lpvoh"]
 [ext_resource type="Shader" uid="uid://duci8tskkq5hy" path="res://city_circle.gdshader" id="3_yk7ts"]
 [ext_resource type="Texture2D" uid="uid://dloilakhuxndj" path="res://assets/art/pixil-frame-0.png" id="6_jcd4p"]
+[ext_resource type="Texture2D" uid="uid://qg4s2on2km8d" path="res://assets/art/low_house.png" id="low_house"]
+[ext_resource type="Texture2D" path="res://assets/art/selection_frame.png" id="sel_frame"]
 [ext_resource type="Texture2D" uid="uid://b5r2hwe62lnc2" path="res://assets/art/store.png" id="7_store"]
 [ext_resource type="Texture2D" uid="uid://cjqyn4dh6tu83" path="res://assets/art/factory.png" id="8_factory"]
 [ext_resource type="Texture2D" uid="uid://bb7tbpdraw8p7" path="res://assets/art/medium_house.png" id="9_mh"]
@@ -76,7 +78,7 @@ texture = ExtResource("1_errlg")
 sources/0 = SubResource("TileSetAtlasSource_bl13t")
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_uacia"]
-texture = ExtResource("6_jcd4p")
+texture = ExtResource("low_house")
 0:0/0 = 0
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_store"]
@@ -188,7 +190,7 @@ sources/0 = SubResource("TileSetAtlasSource_ghpyy")
 sources/1 = SubResource("TileSetAtlasSource_toll")
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ajshl"]
-texture = ExtResource("6_jcd4p")
+texture = ExtResource("sel_frame")
 0:0/0 = 0
 
 [sub_resource type="TileSet" id="TileSet_g10qd"]
@@ -263,6 +265,88 @@ text = "Main Menu"
 layout_mode = 2
 text = "Quit Game"
 
+[node name="GameOverPopup" type="Control" parent="HUD" unique_id=174040097]
+process_mode = 2
+visible = false
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -200.0
+offset_right = 300.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="HUD/GameOverPopup" unique_id=174040098]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -1008.0
+offset_top = -546.0
+offset_right = 1019.0
+offset_bottom = 538.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.78431374)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUD/GameOverPopup" unique_id=174040099]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="Title" type="Label" parent="HUD/GameOverPopup/VBoxContainer" unique_id=174040100]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.34, 0.34, 1)
+theme_override_font_sizes/font_size = 48
+text = "GAME OVER"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Reason" type="Label" parent="HUD/GameOverPopup/VBoxContainer" unique_id=174040101]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "Bankrupt!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MetricsLabel" type="Label" parent="HUD/GameOverPopup/VBoxContainer" unique_id=174040102]
+layout_mode = 2
+text = "Session Stats"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MetricsStats" type="Label" parent="HUD/GameOverPopup/VBoxContainer" unique_id=174040103]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 22
+text = "..."
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HUD/GameOverPopup/VBoxContainer" unique_id=174040104]
+layout_mode = 2
+alignment = 1
+
+[node name="ContinueButton" type="Button" parent="HUD/GameOverPopup/VBoxContainer/HBoxContainer" unique_id=174040105]
+layout_mode = 2
+text = "Continue Playing"
+
+[node name="MainMenuButton" type="Button" parent="HUD/GameOverPopup/VBoxContainer/HBoxContainer" unique_id=174040106]
+layout_mode = 2
+text = "Main Menu"
+
 [node name="Ground" type="TileMapLayer" parent="." unique_id=1563595891]
 tile_set = SubResource("TileSet_gdkyt")
 
@@ -291,3 +375,5 @@ script = ExtResource("2_bl13t")
 [connection signal="pressed" from="HUD/SettingsPopup/VBoxContainer/MainMenu" to="HUD/SettingsPopup" method="_on_main_menu_pressed"]
 [connection signal="pressed" from="HUD/SettingsPopup/VBoxContainer/QuitGame" to="HUD/SettingsPopup" method="_on_quit_game_pressed"]
 [connection signal="display_settings" from="playerCam" to="." method="_on_player_cam_display_settings"]
+[connection signal="pressed" from="HUD/GameOverPopup/VBoxContainer/HBoxContainer/ContinueButton" to="." method="_on_game_over_continue"]
+[connection signal="pressed" from="HUD/GameOverPopup/VBoxContainer/HBoxContainer/MainMenuButton" to="." method="_on_game_over_main_menu"]
