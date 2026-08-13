@@ -18,6 +18,7 @@
 [ext_resource type="Texture2D" uid="uid://umpfdik1qd4y" path="res://assets/art/high_factory.png" id="14_hf"]
 [ext_resource type="Texture2D" uid="uid://r207wjsw02a3" path="res://assets/art/RailsAndRoads.png" id="10_ajshl"]
 [ext_resource type="Texture2D" uid="uid://dvip1bqjox5di" path="res://assets/art/toll.png" id="15_toll"]
+[ext_resource type="Script" path="res://scripts/car_simulator.gd" id="5_cars"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_gdkyt"]
 shader = ExtResource("3_yk7ts")
@@ -250,6 +251,11 @@ tile_set = SubResource("TileSet_t44x1")
 
 [node name="Selection" type="TileMapLayer" parent="." unique_id=1283469471]
 tile_set = SubResource("TileSet_g10qd")
+
+[node name="Cars" type="Node2D" parent="."]
+script = ExtResource("5_cars")
+building_layer = NodePath("Infastructure")
+housing_layer = NodePath("Structures")
 
 [node name="playerCam" type="Camera2D" parent="." unique_id=592935089]
 zoom = Vector2(2, 2)

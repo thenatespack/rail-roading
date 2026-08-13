@@ -28,6 +28,7 @@ var city_markers := {}
 var _game_minutes_of_day := TIME_START_HOUR * 60 + TIME_START_MINUTE
 var _game_day_index := (TIME_START_YEAR * DAYS_PER_YEAR) + (TIME_START_MONTH - 1) * DAYS_PER_MONTH + (TIME_START_DAY - 1)
 var _last_total_population := 0
+var _total_population := 0
 const HOUSING_CHECK_INTERVAL := 10.0
 const BUILDING_SPAWN_CHANCE := 0.3
 const HOUSE_OFFSETS: Array[Vector2i] = [
@@ -142,6 +143,16 @@ func advance_game_time() -> void:
 	_format_game_time()
 
 
+## Current in-game time of day in minutes (0..1439), used by traffic simulators.
+func get_game_minutes_of_day() -> int:
+	return _game_minutes_of_day
+
+
+## Total population across all cities, used to scale traffic volume.
+func get_total_population() -> int:
+	return _total_population
+
+
 ## Renders the current in-game date/time into the HUD clock.
 func _format_game_time() -> void:
 	var days := _game_day_index % DAYS_PER_YEAR
@@ -228,6 +239,7 @@ func update_city_growth() -> void:
 		if marker:
 			marker.update_population(city.population, city.level)
 
+	_total_population = total_population
 	if hud:
 		var pct_change := 0.0
 		if _last_total_population > 0:

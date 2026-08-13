@@ -98,11 +98,11 @@ text = "Stations"
 
 [node name="RemoveButton" type="Button" parent="Control/VBoxContainer/HBoxContainer" unique_id=477098493]
 layout_mode = 2
-text = " Remove "
+text = "   Remove   "
 
 [node name="TollButton" type="Button" parent="Control/VBoxContainer/HBoxContainer" unique_id=477098494]
 layout_mode = 2
-text = "Toll"
+text = "       Toll        "
 
 [node name="HBoxContainer2" type="HBoxContainer" parent="Control/VBoxContainer" unique_id=1833568232]
 layout_mode = 2
