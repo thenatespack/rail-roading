@@ -14,6 +14,8 @@ enum Structure {
 	STATION,
 	TOLL,
 	DEMOLISH,
+	UPGRADE,
+	YELLOW_ROAD,
 	NONE
 }
 
@@ -37,7 +39,9 @@ const BASE_COSTS := {
 	Structure.ROAD: 10.0,
 	Structure.RAIL: 25.0,
 	Structure.STATION: 500.0,
-	Structure.TOLL: 200.0
+	Structure.TOLL: 200.0,
+	Structure.UPGRADE: 50.0,
+	Structure.YELLOW_ROAD: 50.0
 }
 
 const REFUND_RATIO := 0.1
@@ -48,6 +52,14 @@ const ROAD_ATLAS_HORIZONTAL := Vector2i(2, 1)
 const ROAD_ATLAS_DIAGONAL := Vector2i(3, 1)
 const ROAD_ATLAS_INTERSECTION := Vector2i(4, 1)
 const ROAD_ATLAS_TJUNCTION := Vector2i(5, 1)
+
+# Upgraded "yellow" roads: wider (row 3 of the spritesheet)
+const YELLOW_ROAD_ATLAS_VERTICAL := Vector2i(0, 3)
+const YELLOW_ROAD_ATLAS_CORNER := Vector2i(1, 3)
+const YELLOW_ROAD_ATLAS_HORIZONTAL := Vector2i(2, 3)
+const YELLOW_ROAD_ATLAS_DIAGONAL := Vector2i(3, 3)
+const YELLOW_ROAD_ATLAS_INTERSECTION := Vector2i(4, 3)
+const YELLOW_ROAD_ATLAS_TJUNCTION := Vector2i(5, 3)
 const RAIL_ATLAS := Vector2i(0, 2)
 const STATION_ATLAS := Vector2i(0, 0)
 const TOLL_SOURCE := 1
@@ -99,6 +111,10 @@ func attempt_build(world_tile_position: Vector2i) -> bool:
 		build_failed.emit("Terrain unsuitable for building.")
 		return false
 		
+	if current_structure == Structure.UPGRADE \
+			and get_structure_at(world_tile_position) != Structure.ROAD:
+		return false
+		
 	var base_cost: float = BASE_COSTS[current_structure]
 	var final_cost: float = base_cost * terrain_modifier
 	
@@ -114,7 +130,9 @@ func attempt_build(world_tile_position: Vector2i) -> bool:
 func place_structure(tile_position: Vector2i) -> void:
 	if not building_layer:
 		return
-		
+	if current_structure == Structure.UPGRADE \
+			and get_structure_at(tile_position) != Structure.ROAD:
+		return
 	var data := get_texture_and_alternative(tile_position)
 	building_layer.set_cell(tile_position, data.get("source", 0), data.atlas, data.alternative)
 	track_placed_tile(tile_position)
@@ -127,6 +145,9 @@ func try_place_single(tile_position: Vector2i, money: float) -> float:
 		return 0.0
 	var terrain_modifier := map_reference.cost_modifier(tile_position.x, tile_position.y)
 	if terrain_modifier >= 2.0:
+		return 0.0
+	if current_structure == Structure.UPGRADE \
+			and get_structure_at(tile_position) != Structure.ROAD:
 		return 0.0
 	var cost: float = BASE_COSTS[current_structure] * terrain_modifier
 	if money < cost:
@@ -187,6 +208,9 @@ func commit_build(money: float) -> float:
 		var terrain_modifier := map_reference.cost_modifier(tile_pos.x, tile_pos.y)
 		
 		if terrain_modifier < 2.0:
+			if current_structure == Structure.UPGRADE \
+					and get_structure_at(tile_pos) != Structure.ROAD:
+				continue
 			valid_tiles.append(tile_pos)
 			total_cost += BASE_COSTS[current_structure] * terrain_modifier
 	
@@ -225,6 +249,8 @@ func get_structure_at(tile_position: Vector2i) -> int:
 	match building_layer.get_cell_atlas_coords(tile_position):
 		ROAD_ATLAS_VERTICAL, ROAD_ATLAS_CORNER, ROAD_ATLAS_HORIZONTAL, ROAD_ATLAS_DIAGONAL, ROAD_ATLAS_INTERSECTION, ROAD_ATLAS_TJUNCTION:
 			return Structure.ROAD
+		YELLOW_ROAD_ATLAS_VERTICAL, YELLOW_ROAD_ATLAS_CORNER, YELLOW_ROAD_ATLAS_HORIZONTAL, YELLOW_ROAD_ATLAS_DIAGONAL, YELLOW_ROAD_ATLAS_INTERSECTION, YELLOW_ROAD_ATLAS_TJUNCTION:
+			return Structure.YELLOW_ROAD
 		RAIL_ATLAS:
 			return Structure.RAIL
 		STATION_ATLAS:
@@ -233,7 +259,8 @@ func get_structure_at(tile_position: Vector2i) -> int:
 
 
 func is_road(tile_position: Vector2i) -> bool:
-	return get_structure_at(tile_position) == Structure.ROAD
+	return get_structure_at(tile_position) == Structure.ROAD \
+		or get_structure_at(tile_position) == Structure.YELLOW_ROAD
 
 
 # Returns the directions (UP/DOWN/LEFT/RIGHT) a road tile connects to,
@@ -258,7 +285,15 @@ func get_diagonal_connections(tile_position: Vector2i, planned_tiles: Array) -> 
 
 
 # Picks atlas coords + alternative for a road tile based on its connections.
-func get_road_data(tile_position: Vector2i, planned_tiles: Array) -> Dictionary:
+# `upgraded` selects the wider yellow atlas variety.
+func get_road_data(tile_position: Vector2i, planned_tiles: Array, upgraded: bool = false) -> Dictionary:
+	var v_atlas := YELLOW_ROAD_ATLAS_VERTICAL if upgraded else ROAD_ATLAS_VERTICAL
+	var corner_atlas := YELLOW_ROAD_ATLAS_CORNER if upgraded else ROAD_ATLAS_CORNER
+	var h_atlas := YELLOW_ROAD_ATLAS_HORIZONTAL if upgraded else ROAD_ATLAS_HORIZONTAL
+	var diag_atlas := YELLOW_ROAD_ATLAS_DIAGONAL if upgraded else ROAD_ATLAS_DIAGONAL
+	var inter_atlas := YELLOW_ROAD_ATLAS_INTERSECTION if upgraded else ROAD_ATLAS_INTERSECTION
+	var tj_atlas := YELLOW_ROAD_ATLAS_TJUNCTION if upgraded else ROAD_ATLAS_TJUNCTION
+
 	var conns := get_road_connections(tile_position, planned_tiles)
 	var up := conns.has(Vector2i.UP)
 	var down := conns.has(Vector2i.DOWN)
@@ -267,33 +302,33 @@ func get_road_data(tile_position: Vector2i, planned_tiles: Array) -> Dictionary:
 
 	# Four-way intersection when all directions connect
 	if up and down and left and right:
-		return {"atlas": ROAD_ATLAS_INTERSECTION, "alternative": 0}
+		return {"atlas": inter_atlas, "alternative": 0}
 
 	# T-junction when exactly three directions connect
 	if (int(up) + int(down) + int(left) + int(right)) == 3:
 		if not up:
-			return {"atlas": ROAD_ATLAS_TJUNCTION, "alternative": T_ALT_EWS}
+			return {"atlas": tj_atlas, "alternative": T_ALT_EWS}
 		if not down:
-			return {"atlas": ROAD_ATLAS_TJUNCTION, "alternative": T_ALT_EWN}
+			return {"atlas": tj_atlas, "alternative": T_ALT_EWN}
 		if not left:
-			return {"atlas": ROAD_ATLAS_TJUNCTION, "alternative": T_ALT_NSE}
+			return {"atlas": tj_atlas, "alternative": T_ALT_NSE}
 		if not right:
-			return {"atlas": ROAD_ATLAS_TJUNCTION, "alternative": T_ALT_NSW}
+			return {"atlas": tj_atlas, "alternative": T_ALT_NSW}
 
 	if up and down:
-		return {"atlas": ROAD_ATLAS_VERTICAL, "alternative": 0}
+		return {"atlas": v_atlas, "alternative": 0}
 	if left and right:
-		return {"atlas": ROAD_ATLAS_HORIZONTAL, "alternative": 0}
+		return {"atlas": h_atlas, "alternative": 0}
 
 	# Corner base tile connects EAST and SOUTH; alternatives cover the rest
 	if right and down:
-		return {"atlas": ROAD_ATLAS_CORNER, "alternative": CORNER_ALT_EAST_SOUTH}
+		return {"atlas": corner_atlas, "alternative": CORNER_ALT_EAST_SOUTH}
 	if left and down:
-		return {"atlas": ROAD_ATLAS_CORNER, "alternative": CORNER_ALT_WEST_SOUTH}
+		return {"atlas": corner_atlas, "alternative": CORNER_ALT_WEST_SOUTH}
 	if right and up:
-		return {"atlas": ROAD_ATLAS_CORNER, "alternative": CORNER_ALT_EAST_NORTH}
+		return {"atlas": corner_atlas, "alternative": CORNER_ALT_EAST_NORTH}
 	if left and up:
-		return {"atlas": ROAD_ATLAS_CORNER, "alternative": CORNER_ALT_WEST_NORTH}
+		return {"atlas": corner_atlas, "alternative": CORNER_ALT_WEST_NORTH}
 
 	# Diagonal (45°) roads: base tile runs NW-SE ("\"), alternative 1 runs NE-SW ("/")
 	var diag := get_diagonal_connections(tile_position, planned_tiles)
@@ -302,14 +337,14 @@ func get_road_data(tile_position: Vector2i, planned_tiles: Array) -> Dictionary:
 	var sw := diag.has(Vector2i(-1, 1))
 	var se := diag.has(Vector2i(1, 1))
 	if nw and se:
-		return {"atlas": ROAD_ATLAS_DIAGONAL, "alternative": DIAGONAL_ALT_NW_SE}
+		return {"atlas": diag_atlas, "alternative": DIAGONAL_ALT_NW_SE}
 	if ne and sw:
-		return {"atlas": ROAD_ATLAS_DIAGONAL, "alternative": DIAGONAL_ALT_NE_SW}
+		return {"atlas": diag_atlas, "alternative": DIAGONAL_ALT_NE_SW}
 
 	# Dead end: point the straight toward the single connection
 	if up or down:
-		return {"atlas": ROAD_ATLAS_VERTICAL, "alternative": 0}
-	return {"atlas": ROAD_ATLAS_HORIZONTAL, "alternative": 0}
+		return {"atlas": v_atlas, "alternative": 0}
+	return {"atlas": h_atlas, "alternative": 0}
 
 
 func place_structure_line(tiles: Array) -> void:
@@ -319,6 +354,9 @@ func place_structure_line(tiles: Array) -> void:
 	for i in range(tiles.size()):
 		var tile_pos = tiles[i]
 		
+		if current_structure == Structure.UPGRADE \
+				and get_structure_at(tile_pos) != Structure.ROAD:
+			continue
 		# Determine orientation context from neighbors within the line or existing map
 		var data := get_texture_and_alternative_for_line(tiles, i)
 		building_layer.set_cell(tile_pos, data.get("source", 0), data.atlas, data.alternative)
@@ -348,6 +386,8 @@ func get_texture_and_alternative(tile_position: Vector2) -> Dictionary:
 	match current_structure:
 		Structure.ROAD:
 			return get_road_data(Vector2i(tile_position), [])
+		Structure.UPGRADE:
+			return get_road_data(Vector2i(tile_position), [], true)
 		Structure.RAIL:
 			atlas_coords = RAIL_ATLAS
 			if is_vertical_neighbor(Vector2i(tile_position)):
@@ -372,6 +412,8 @@ func get_texture_and_alternative_for_line(tiles: Array, index: int) -> Dictionar
 	match current_structure:
 		Structure.ROAD:
 			return get_road_data(tile_pos, tiles)
+		Structure.UPGRADE:
+			return get_road_data(tile_pos, tiles, true)
 		Structure.RAIL:
 			atlas_coords = RAIL_ATLAS
 

@@ -104,6 +104,11 @@ text = "   Remove   "
 layout_mode = 2
 text = "       Toll        "
 
+[node name="UpgradeButton" type="Button" parent="Control/VBoxContainer/HBoxContainer" unique_id=477098495 groups=["DOT"]]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+text = "Upgrade"
+
 [node name="HBoxContainer2" type="HBoxContainer" parent="Control/VBoxContainer" unique_id=1833568232]
 layout_mode = 2
 theme_override_constants/separation = 16
@@ -147,3 +152,4 @@ text = "TIME: 10/26/25 3:22pm"
 [connection signal="pressed" from="Control/VBoxContainer/HBoxContainer/StationsButton" to="." method="_on_stations_button_pressed"]
 [connection signal="pressed" from="Control/VBoxContainer/HBoxContainer/RemoveButton" to="." method="_on_remove_button_pressed"]
 [connection signal="pressed" from="Control/VBoxContainer/HBoxContainer/TollButton" to="." method="_on_toll_button_pressed"]
+[connection signal="pressed" from="Control/VBoxContainer/HBoxContainer/UpgradeButton" to="." method="_on_upgrade_button_pressed"]

@@ -23,6 +23,7 @@ var is_dragging := false
 var housing_timer := 0.0
 var growth_timer := 0.0
 var toll_timer := 0.0
+var maintenance_timer := 0.0
 var city_markers := {}
 # In-game clock state.
 var _game_minutes_of_day := TIME_START_HOUR * 60 + TIME_START_MINUTE
@@ -48,7 +49,7 @@ const BUILDING_SOURCE := {
 	MapGenerator.ZoneType.INDUSTRIAL: [2, 5, 8],
 }
 # A city levels up when this fraction of its buildable zone tiles is filled.
-const LEVEL_UP_RATIO := 0.6
+const LEVEL_UP_RATIO := 0.45
 # Minimum seconds between level ups, so a city can't densify in one burst.
 const LEVEL_UP_COOLDOWN := 10.0
 # How many buildings densify per growth tick while a level-up is in progress.
@@ -56,6 +57,11 @@ const UPGRADE_BATCH_SIZE := 12
 # Toll booths charge toll_rate dollars per person driving through, each interval.
 const TOLL_INTERVAL := 2.0
 const TOLL_RATE := 0.05
+# Road maintenance: every interval, each road tile costs its upkeep. More roads
+# (and upgraded gold roads) drive the upkeep cost up.
+const MAINTENANCE_INTERVAL := 2.0
+const ROAD_MAINTENANCE_COST := 0.05
+const GOLD_ROAD_MAINTENANCE_COST := 0.12
 # In-game clock: starts at the date shown in the HUD and advances each growth
 # tick by TIME_STEP_MINUTES.
 const TIME_START_MONTH := 10
@@ -132,6 +138,10 @@ func _process(delta: float) -> void:
 	if toll_timer >= TOLL_INTERVAL:
 		toll_timer = 0.0
 		process_tolls()
+	maintenance_timer += delta
+	if maintenance_timer >= MAINTENANCE_INTERVAL:
+		maintenance_timer = 0.0
+		process_road_maintenance()
 
 
 ## Advances the in-game clock by one tick's worth of time and refreshes the HUD.
@@ -354,11 +364,33 @@ func calculate_toll_traffic(toll: Vector2i) -> int:
 					var level := clampi(city.level if city else 0, 0, MapGenerator.DENSITY_LEVELS - 1)
 					traffic += building_pop(zone, level)
 			# Keep flooding along the connected road network.
-			if build_tool and build_tool.get_structure_at(neighbor) == BuildTool.Structure.ROAD \
+			if build_tool and build_tool.is_road(neighbor) \
 					and not visited.has(neighbor):
 				visited[neighbor] = true
 				queue.append(neighbor)
 	return traffic
+
+
+## Charges the player road maintenance based on the total number of road tiles.
+## Gold (upgraded) roads cost more to maintain per tile than normal roads.
+func process_road_maintenance() -> void:
+	if build_tool == null or not player:
+		return
+	var road_count := 0
+	var gold_road_count := 0
+	for road: Vector2i in build_tool.road_tiles:
+		if build_tool.get_structure_at(road) == BuildTool.Structure.YELLOW_ROAD:
+			gold_road_count += 1
+		else:
+			road_count += 1
+	var expense := road_count * ROAD_MAINTENANCE_COST \
+		+ gold_road_count * GOLD_ROAD_MAINTENANCE_COST
+	if expense <= 0.0:
+		return
+	player.money -= expense
+	if hud:
+		hud.update_expenses(expense)
+		hud.update_money(player.money)
 
 
 ## Charges every toll booth for the people driving through it and credits the
@@ -377,7 +409,8 @@ func process_tolls() -> void:
 
 
 func _on_structure_removed(position: Vector2i, structure: int) -> void:
-	if structure != BuildTool.Structure.ROAD:
+	if structure != BuildTool.Structure.ROAD \
+			and structure != BuildTool.Structure.YELLOW_ROAD:
 		return
 	for offset in HOUSE_OFFSETS:
 		var house_pos := position + offset
@@ -394,7 +427,7 @@ func has_road_neighbor(pos: Vector2i) -> bool:
 		return false
 	for offset in HOUSE_OFFSETS:
 		var neighbor := pos + offset
-		if build_tool.get_structure_at(neighbor) == BuildTool.Structure.ROAD:
+		if build_tool.is_road(neighbor):
 			return true
 	return false
 

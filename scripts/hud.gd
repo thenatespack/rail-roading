@@ -2,7 +2,7 @@ extends CanvasLayer
 
 enum PlayerType { TA, DOT, BOTH }
 
-enum BuildingType {ROAD, RAIL, STATION, TOLL, DEMOLISH}
+enum BuildingType {ROAD, RAIL, STATION, TOLL, DEMOLISH, UPGRADE}
 
 @export var player_type: PlayerType = PlayerType.BOTH
 
@@ -71,5 +71,14 @@ func update_toll_income(income: float, traffic: int) -> void:
 		$Debug/VBoxContainer/TollLabel.text = "Tolls: %d trips, +$%.2f" % [traffic, income]
 
 
+func update_expenses(expense: float) -> void:
+	if has_node("Control/VBoxContainer/HBoxContainer2/ExpensesLabel"):
+		$Control/VBoxContainer/HBoxContainer2/ExpensesLabel.text = "Expenses: -$%.2f" % expense
+
+
 func _on_remove_button_pressed() -> void:
 	emit_signal("build_time", BuildingType.DEMOLISH)
+
+
+func _on_upgrade_button_pressed() -> void:
+	emit_signal("build_time", BuildingType.UPGRADE)

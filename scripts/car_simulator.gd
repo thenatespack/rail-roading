@@ -25,6 +25,8 @@ const ROAD_DIRECTIONS: Array[Vector2i] = [
 const ROAD_ATLAS: Array[Vector2i] = [
 	Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1),
 	Vector2i(3, 1), Vector2i(4, 1), Vector2i(5, 1),
+	Vector2i(0, 3), Vector2i(1, 3), Vector2i(2, 3),
+	Vector2i(3, 3), Vector2i(4, 3), Vector2i(5, 3),
 ]
 
 # Building sources on the housing layer: homes and workplaces for commutes.
