@@ -22,7 +22,12 @@ var current_chunk := Vector2i.ZERO
 var is_dragging := false
 var housing_timer := 0.0
 var growth_timer := 0.0
+var toll_timer := 0.0
 var city_markers := {}
+# In-game clock state.
+var _game_minutes_of_day := TIME_START_HOUR * 60 + TIME_START_MINUTE
+var _game_day_index := (TIME_START_YEAR * DAYS_PER_YEAR) + (TIME_START_MONTH - 1) * DAYS_PER_MONTH + (TIME_START_DAY - 1)
+var _last_total_population := 0
 const HOUSING_CHECK_INTERVAL := 10.0
 const BUILDING_SPAWN_CHANCE := 0.3
 const HOUSE_OFFSETS: Array[Vector2i] = [
@@ -47,6 +52,21 @@ const LEVEL_UP_RATIO := 0.6
 const LEVEL_UP_COOLDOWN := 10.0
 # How many buildings densify per growth tick while a level-up is in progress.
 const UPGRADE_BATCH_SIZE := 12
+# Toll booths charge toll_rate dollars per person driving through, each interval.
+const TOLL_INTERVAL := 2.0
+const TOLL_RATE := 0.05
+# In-game clock: starts at the date shown in the HUD and advances each growth
+# tick by TIME_STEP_MINUTES.
+const TIME_START_MONTH := 10
+const TIME_START_DAY := 26
+const TIME_START_YEAR := 25
+const TIME_START_HOUR := 15
+const TIME_START_MINUTE := 22
+const TIME_STEP_MINUTES := 60
+const MINUTES_PER_DAY := 60 * 24
+const DAYS_PER_MONTH := 30
+const MONTHS_PER_YEAR := 12
+const DAYS_PER_YEAR := DAYS_PER_MONTH * MONTHS_PER_YEAR
 
 func _ready() -> void:
 	generator = MapGenerator.new(CHUNK_SIZE, MAP_SEED)
@@ -65,6 +85,7 @@ func _ready() -> void:
 	update_chunks()
 	if player and "money" in player:
 		hud.update_money(player.money)
+	_format_game_time()
 
 
 func spawn_city_marker(city) -> void:
@@ -105,6 +126,39 @@ func _process(delta: float) -> void:
 	if growth_timer >= GROWTH_INTERVAL:
 		growth_timer = 0.0
 		update_city_growth()
+		advance_game_time()
+	toll_timer += delta
+	if toll_timer >= TOLL_INTERVAL:
+		toll_timer = 0.0
+		process_tolls()
+
+
+## Advances the in-game clock by one tick's worth of time and refreshes the HUD.
+func advance_game_time() -> void:
+	_game_minutes_of_day += TIME_STEP_MINUTES
+	if _game_minutes_of_day >= MINUTES_PER_DAY:
+		_game_minutes_of_day -= MINUTES_PER_DAY
+		_game_day_index += 1
+	_format_game_time()
+
+
+## Renders the current in-game date/time into the HUD clock.
+func _format_game_time() -> void:
+	var days := _game_day_index % DAYS_PER_YEAR
+	var year := _game_day_index / DAYS_PER_YEAR
+	var month := days / DAYS_PER_MONTH + 1
+	var day := days % DAYS_PER_MONTH + 1
+	var hour := _game_minutes_of_day / 60
+	var minute := _game_minutes_of_day % 60
+	var suffix := "am"
+	var display_hour := hour
+	if hour >= 12:
+		suffix = "pm"
+		display_hour = hour - 12
+	if display_hour == 0:
+		display_hour = 12
+	if hud:
+		hud.update_time("TIME: %02d/%02d/%02d %d:%02d%s" % [month, day, year, display_hour, minute, suffix])
 
 
 func try_build_buildings() -> void:
@@ -175,7 +229,11 @@ func update_city_growth() -> void:
 			marker.update_population(city.population, city.level)
 
 	if hud:
-		hud.update_population(total_population)
+		var pct_change := 0.0
+		if _last_total_population > 0:
+			pct_change = float(total_population - _last_total_population) / float(_last_total_population) * 100.0
+		_last_total_population = total_population
+		hud.update_population(total_population, pct_change)
 
 
 ## Zone (0/1/2) for a building tile source, or -1 if it isn't a building.
@@ -249,6 +307,61 @@ func process_pending_upgrades(city: MapGenerator.City) -> void:
 		if housing_tilemap.get_cell_source_id(cell) != source:
 			housing_tilemap.set_cell(cell, source, Vector2i(0, 0), 0)
 		upgraded += 1
+
+
+## Population one building of a zone/density tier contributes.
+func building_pop(zone: int, level: int) -> int:
+	match zone:
+		MapGenerator.ZoneType.HOUSING:
+			return POP_PER_HOUSING[level]
+		MapGenerator.ZoneType.COMMERCIAL:
+			return POP_PER_COMMERCIAL[level]
+		MapGenerator.ZoneType.INDUSTRIAL:
+			return POP_PER_INDUSTRIAL[level]
+	return 0
+
+
+## People driving through a toll: the population of every building connected to
+## the road network that passes through the toll booth.
+func calculate_toll_traffic(toll: Vector2i) -> int:
+	var visited := {}
+	var queue: Array[Vector2i] = [toll]
+	visited[toll] = true
+	var counted := {}
+	var traffic := 0
+	while not queue.is_empty():
+		var tile: Vector2i = queue.pop_front()
+		for direction: Vector2i in HOUSE_OFFSETS:
+			var neighbor := tile + direction
+			if not counted.has(neighbor) and housing_tilemap \
+					and housing_tilemap.get_cell_source_id(neighbor) != -1:
+				var zone := source_to_zone(housing_tilemap.get_cell_source_id(neighbor))
+				if zone >= 0:
+					counted[neighbor] = true
+					var city = generator.get_city_at(neighbor)
+					var level := clampi(city.level if city else 0, 0, MapGenerator.DENSITY_LEVELS - 1)
+					traffic += building_pop(zone, level)
+			# Keep flooding along the connected road network.
+			if build_tool and build_tool.get_structure_at(neighbor) == BuildTool.Structure.ROAD \
+					and not visited.has(neighbor):
+				visited[neighbor] = true
+				queue.append(neighbor)
+	return traffic
+
+
+## Charges every toll booth for the people driving through it and credits the
+## player. Exposes the totals to the HUD.
+func process_tolls() -> void:
+	if build_tool == null or build_tool.toll_tiles.is_empty() or not player:
+		return
+	var total_traffic := 0
+	for toll: Vector2i in build_tool.toll_tiles:
+		total_traffic += calculate_toll_traffic(toll)
+	var income := total_traffic * TOLL_RATE
+	player.money += income
+	if hud:
+		hud.update_toll_income(income, total_traffic)
+		hud.update_money(player.money)
 
 
 func _on_structure_removed(position: Vector2i, structure: int) -> void:

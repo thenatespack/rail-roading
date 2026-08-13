@@ -2,7 +2,7 @@ extends CanvasLayer
 
 enum PlayerType { TA, DOT, BOTH }
 
-enum BuildingType {ROAD, RAIL, STATION, DEMOLISH}
+enum BuildingType {ROAD, RAIL, STATION, TOLL, DEMOLISH}
 
 @export var player_type: PlayerType = PlayerType.BOTH
 
@@ -32,10 +32,20 @@ func _process(_delta: float) -> void:
 
 func update_money(money: float):
 	$Debug/VBoxContainer/Money.text ="Money: $"+ str(money)
+	if has_node("Control/VBoxContainer/HBoxContainer2/BalanceLabel"):
+		$Control/VBoxContainer/HBoxContainer2/BalanceLabel.text = "Balance: $%.2f" % money
 
 
-func update_population(population: int) -> void:
-	$Debug/VBoxContainer/PopulationLabel.text = "Population: %d" % population
+func update_time(text: String) -> void:
+	if has_node("Control/VBoxContainer/HBoxContainer2/TimeLabel"):
+		$Control/VBoxContainer/HBoxContainer2/TimeLabel.text = text
+
+
+func update_population(population: int, pct_change: float = 0.0) -> void:
+	var text := "Population: %d (%.1f%%)" % [population, pct_change]
+	$Debug/VBoxContainer/PopulationLabel.text = text
+	if has_node("Control/VBoxContainer/HBoxContainer2/PopulationLabel"):
+		$Control/VBoxContainer/HBoxContainer2/PopulationLabel.text = "Population: %d (%.1f%%)" % [population, pct_change]
 
 
 func _on_roads_button_pressed() -> void:
@@ -48,6 +58,17 @@ func _on_tracks_button_pressed() -> void:
 
 func _on_stations_button_pressed() -> void:
 	emit_signal("build_time",BuildingType.STATION)
+
+
+func _on_toll_button_pressed() -> void:
+	emit_signal("build_time",BuildingType.TOLL)
+
+
+func update_toll_income(income: float, traffic: int) -> void:
+	if has_node("Control/VBoxContainer/HBoxContainer2/IncomeLabel"):
+		$Control/VBoxContainer/HBoxContainer2/IncomeLabel.text = "Income: +$%.2f" % income
+	if has_node("Debug/VBoxContainer/TollLabel"):
+		$Debug/VBoxContainer/TollLabel.text = "Tolls: %d trips, +$%.2f" % [traffic, income]
 
 
 func _on_remove_button_pressed() -> void:

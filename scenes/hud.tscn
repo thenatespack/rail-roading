@@ -14,7 +14,8 @@ layout_mode = 3
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -250.0
+offset_left = -380.0
+offset_right = -130.0
 offset_bottom = 100.0
 grow_horizontal = 0
 theme = SubResource("Theme_ahhtf")
@@ -38,6 +39,10 @@ text = "RAM:"
 
 [node name="PopulationLabel" type="Label" parent="Debug/VBoxContainer" unique_id=1940756923]
 layout_mode = 2
+
+[node name="TollLabel" type="Label" parent="Debug/VBoxContainer" unique_id=1940756924]
+layout_mode = 2
+text = "Tolls:"
 
 [node name="Control" type="Control" parent="." unique_id=276003443]
 layout_mode = 3
@@ -95,6 +100,10 @@ text = "Stations"
 layout_mode = 2
 text = " Remove "
 
+[node name="TollButton" type="Button" parent="Control/VBoxContainer/HBoxContainer" unique_id=477098494]
+layout_mode = 2
+text = "Toll"
+
 [node name="HBoxContainer2" type="HBoxContainer" parent="Control/VBoxContainer" unique_id=1833568232]
 layout_mode = 2
 theme_override_constants/separation = 16
@@ -137,3 +146,4 @@ text = "TIME: 10/26/25 3:22pm"
 [connection signal="pressed" from="Control/VBoxContainer/HBoxContainer/TracksButton" to="." method="_on_tracks_button_pressed"]
 [connection signal="pressed" from="Control/VBoxContainer/HBoxContainer/StationsButton" to="." method="_on_stations_button_pressed"]
 [connection signal="pressed" from="Control/VBoxContainer/HBoxContainer/RemoveButton" to="." method="_on_remove_button_pressed"]
+[connection signal="pressed" from="Control/VBoxContainer/HBoxContainer/TollButton" to="." method="_on_toll_button_pressed"]

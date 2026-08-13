@@ -17,6 +17,7 @@
 [ext_resource type="Texture2D" uid="uid://m2gmw6hv3061" path="res://assets/art/medium_factory.png" id="13_mf"]
 [ext_resource type="Texture2D" uid="uid://umpfdik1qd4y" path="res://assets/art/high_factory.png" id="14_hf"]
 [ext_resource type="Texture2D" uid="uid://r207wjsw02a3" path="res://assets/art/RailsAndRoads.png" id="10_ajshl"]
+[ext_resource type="Texture2D" uid="uid://dvip1bqjox5di" path="res://assets/art/toll.png" id="15_toll"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_gdkyt"]
 shader = ExtResource("3_yk7ts")
@@ -138,8 +139,13 @@ texture = ExtResource("10_ajshl")
 0:2/4 = 4
 0:2/4/transpose = true
 
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_toll"]
+texture = ExtResource("15_toll")
+0:0/0 = 0
+
 [sub_resource type="TileSet" id="TileSet_t44x1"]
 sources/0 = SubResource("TileSetAtlasSource_ghpyy")
+sources/1 = SubResource("TileSetAtlasSource_toll")
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ajshl"]
 texture = ExtResource("6_jcd4p")

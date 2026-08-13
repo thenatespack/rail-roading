@@ -12,6 +12,7 @@ enum Structure {
 	ROAD,
 	RAIL,
 	STATION,
+	TOLL,
 	DEMOLISH,
 	NONE
 }
@@ -29,11 +30,14 @@ var press_placed_tile := Vector2i(-999999, -999999)
 
 # All road tiles the player has placed, used for house placement near roads
 var road_tiles: Array[Vector2i] = []
+# All toll booths the player has placed, used to collect toll revenue
+var toll_tiles: Array[Vector2i] = []
 
 const BASE_COSTS := {
 	Structure.ROAD: 10.0,
 	Structure.RAIL: 25.0,
-	Structure.STATION: 500.0
+	Structure.STATION: 500.0,
+	Structure.TOLL: 200.0
 }
 
 const REFUND_RATIO := 0.1
@@ -43,6 +47,8 @@ const ROAD_ATLAS_CORNER := Vector2i(1, 1)
 const ROAD_ATLAS_HORIZONTAL := Vector2i(2, 1)
 const RAIL_ATLAS := Vector2i(0, 2)
 const STATION_ATLAS := Vector2i(0, 0)
+const TOLL_SOURCE := 1
+const TOLL_ATLAS := Vector2i(0, 0)
 
 # Corner (1,1) base connects EAST and SOUTH. Alternative IDs are flip bitmasks:
 # 0 = base {E,S}, 1 = flip_h {W,S}, 2 = flip_v {E,N}, 3 = flip_h+flip_v {W,N}
@@ -95,7 +101,7 @@ func place_structure(tile_position: Vector2i) -> void:
 		return
 		
 	var data := get_texture_and_alternative(tile_position)
-	building_layer.set_cell(tile_position, 0, data.atlas, data.alternative)
+	building_layer.set_cell(tile_position, data.get("source", 0), data.atlas, data.alternative)
 	track_placed_tile(tile_position)
 
 
@@ -189,6 +195,8 @@ func remove_structure(tile_position: Vector2i) -> float:
 		return 0.0
 	building_layer.erase_cell(tile_position)
 	road_tiles.erase(tile_position)
+	if structure == Structure.TOLL:
+		toll_tiles.erase(tile_position)
 	structure_removed.emit(tile_position, structure)
 	var build_cost: float = BASE_COSTS[structure] * map_reference.cost_modifier(tile_position.x, tile_position.y)
 	return build_cost * REFUND_RATIO
@@ -197,6 +205,8 @@ func remove_structure(tile_position: Vector2i) -> float:
 func get_structure_at(tile_position: Vector2i) -> int:
 	if not building_layer or building_layer.get_cell_source_id(tile_position) == -1:
 		return Structure.NONE
+	if building_layer.get_cell_source_id(tile_position) == TOLL_SOURCE:
+		return Structure.TOLL
 	match building_layer.get_cell_atlas_coords(tile_position):
 		ROAD_ATLAS_VERTICAL, ROAD_ATLAS_CORNER, ROAD_ATLAS_HORIZONTAL:
 			return Structure.ROAD
@@ -260,20 +270,27 @@ func place_structure_line(tiles: Array) -> void:
 		
 		# Determine orientation context from neighbors within the line or existing map
 		var data := get_texture_and_alternative_for_line(tiles, i)
-		building_layer.set_cell(tile_pos, 0, data.atlas, data.alternative)
+		building_layer.set_cell(tile_pos, data.get("source", 0), data.atlas, data.alternative)
 		track_placed_tile(tile_pos)
 
 
-# Records road tiles so houses can be built along them later
+# Records road tiles so houses can be built along them later, and toll booths
+# so traffic can be measured through them.
 func track_placed_tile(tile_position: Vector2i) -> void:
-	if current_structure != Structure.ROAD:
-		return
-	if not road_tiles.has(tile_position):
-		road_tiles.append(tile_position)
+	if current_structure == Structure.ROAD:
+		if not road_tiles.has(tile_position):
+			road_tiles.append(tile_position)
+	elif current_structure == Structure.TOLL:
+		if not toll_tiles.has(tile_position):
+			toll_tiles.append(tile_position)
 
 
 # Determines atlas coordinates and alternative tile flags (rotation/flip)
 func get_texture_and_alternative(tile_position: Vector2) -> Dictionary:
+	# Toll booths use their own tileset source; everything else uses source 0.
+	if current_structure == Structure.TOLL:
+		return {"source": TOLL_SOURCE, "atlas": TOLL_ATLAS, "alternative": 0}
+
 	var atlas_coords := Vector2i.ZERO
 	var alternative_tile := 0
 
@@ -289,11 +306,14 @@ func get_texture_and_alternative(tile_position: Vector2) -> Dictionary:
 		Structure.STATION:
 			atlas_coords = STATION_ATLAS
 
-	return {"atlas": atlas_coords, "alternative": alternative_tile}
+	return {"source": 0, "atlas": atlas_coords, "alternative": alternative_tile}
 
 
 # Specialized check for batch/line placements to look at adjacent items in the drag array
 func get_texture_and_alternative_for_line(tiles: Array, index: int) -> Dictionary:
+	if current_structure == Structure.TOLL:
+		return get_texture_and_alternative(Vector2(tiles[index]))
+
 	var tile_pos: Vector2i = tiles[index]
 	var atlas_coords := Vector2i.ZERO
 	var alternative_tile := 0
