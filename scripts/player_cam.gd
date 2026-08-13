@@ -5,7 +5,7 @@ extends Camera2D
 @export var min_zoom: float = 1.0
 @export var max_zoom: float = 10.0
 @export var zoom_smoothness: float = 8.0
-var money: float = 100.0
+var money: float = 5000.0
 
 signal display_settings
 

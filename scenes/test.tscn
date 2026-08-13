@@ -7,8 +7,16 @@
 [ext_resource type="Script" uid="uid://cuprhdcrlqn36" path="res://scripts/city_marker.gd" id="2_uacia"]
 [ext_resource type="Script" uid="uid://tp8vv7if8qec" path="res://scripts/in_game_settings_popup.gd" id="3_lpvoh"]
 [ext_resource type="Shader" uid="uid://duci8tskkq5hy" path="res://city_circle.gdshader" id="3_yk7ts"]
-[ext_resource type="Texture2D" uid="uid://bd7xlht3xjqju" path="res://assets/art/RoadsAndRailsSpriteSheet.png" id="4_j5jx5"]
 [ext_resource type="Texture2D" uid="uid://dloilakhuxndj" path="res://assets/art/pixil-frame-0.png" id="6_jcd4p"]
+[ext_resource type="Texture2D" uid="uid://b5r2hwe62lnc2" path="res://assets/art/store.png" id="7_store"]
+[ext_resource type="Texture2D" uid="uid://cjqyn4dh6tu83" path="res://assets/art/factory.png" id="8_factory"]
+[ext_resource type="Texture2D" uid="uid://bb7tbpdraw8p7" path="res://assets/art/medium_house.png" id="9_mh"]
+[ext_resource type="Texture2D" uid="uid://vkmoq7c3rbd2" path="res://assets/art/high_house.png" id="10_hh"]
+[ext_resource type="Texture2D" uid="uid://dhxkmr487r0gc" path="res://assets/art/medium_store.png" id="11_ms"]
+[ext_resource type="Texture2D" uid="uid://dsejftp3aandq" path="res://assets/art/high_store.png" id="12_hs"]
+[ext_resource type="Texture2D" uid="uid://m2gmw6hv3061" path="res://assets/art/medium_factory.png" id="13_mf"]
+[ext_resource type="Texture2D" uid="uid://umpfdik1qd4y" path="res://assets/art/high_factory.png" id="14_hf"]
+[ext_resource type="Texture2D" uid="uid://r207wjsw02a3" path="res://assets/art/RailsAndRoads.png" id="10_ajshl"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_gdkyt"]
 shader = ExtResource("3_yk7ts")
@@ -16,6 +24,16 @@ shader_parameter/heart_radius = 0.1
 shader_parameter/heart_color = Color(1, 0.2, 0.2, 1)
 shader_parameter/influence_radius = 0.4
 shader_parameter/influence_color = Color(0.2, 0.5, 1, 0.5)
+shader_parameter/show_zones = true
+shader_parameter/zone_seed_i = 0
+shader_parameter/cell_size = 4
+shader_parameter/zone_split_a = 512
+shader_parameter/zone_split_b = 819
+shader_parameter/zone_rect_tiles = 16.0
+shader_parameter/zone_opacity = 0.75
+shader_parameter/residential_color = Color(0.25, 0.75, 0.3, 1)
+shader_parameter/commercial_color = Color(0.3, 0.55, 1, 1)
+shader_parameter/industrial_color = Color(0.95, 0.75, 0.2, 1)
 shader_parameter/aa_width = 0.01
 
 [sub_resource type="PackedScene" id="PackedScene_ajshl"]
@@ -57,23 +75,85 @@ sources/0 = SubResource("TileSetAtlasSource_bl13t")
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_uacia"]
 texture = ExtResource("6_jcd4p")
+0:0/0 = 0
 
-[sub_resource type="TileSet" id="TileSet_k3o8w"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_store"]
+texture = ExtResource("7_store")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_factory"]
+texture = ExtResource("8_factory")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mhouse"]
+texture = ExtResource("9_mh")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_hhouse"]
+texture = ExtResource("10_hh")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mstore"]
+texture = ExtResource("11_ms")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_hstore"]
+texture = ExtResource("12_hs")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_mfactory"]
+texture = ExtResource("13_mf")
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_hfactory"]
+texture = ExtResource("14_hf")
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_ahhtf"]
 sources/0 = SubResource("TileSetAtlasSource_uacia")
+sources/1 = SubResource("TileSetAtlasSource_store")
+sources/2 = SubResource("TileSetAtlasSource_factory")
+sources/3 = SubResource("TileSetAtlasSource_mhouse")
+sources/4 = SubResource("TileSetAtlasSource_mstore")
+sources/5 = SubResource("TileSetAtlasSource_mfactory")
+sources/6 = SubResource("TileSetAtlasSource_hhouse")
+sources/7 = SubResource("TileSetAtlasSource_hstore")
+sources/8 = SubResource("TileSetAtlasSource_hfactory")
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_lpvoh"]
-texture = ExtResource("4_j5jx5")
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ghpyy"]
+texture = ExtResource("10_ajshl")
+0:0/0 = 0
 0:1/0 = 0
+1:1/next_alternative_id = 4
+1:1/0 = 0
+1:1/1 = 1
+1:1/1/flip_h = true
+1:1/2 = 2
+1:1/2/flip_v = true
+1:1/3 = 3
+1:1/3/flip_h = true
+1:1/3/flip_v = true
+2:1/0 = 0
 0:2/0 = 0
+0:2/4 = 4
+0:2/4/transpose = true
 
-[sub_resource type="TileSet" id="TileSet_74lek"]
-sources/0 = SubResource("TileSetAtlasSource_lpvoh")
+[sub_resource type="TileSet" id="TileSet_t44x1"]
+sources/0 = SubResource("TileSetAtlasSource_ghpyy")
 
-[node name="Test_World" type="Node2D" unique_id=84581027 node_paths=PackedStringArray("tile_map", "infrastructure_tilemap", "housing_tilemap", "player")]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ajshl"]
+texture = ExtResource("6_jcd4p")
+0:0/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_g10qd"]
+sources/0 = SubResource("TileSetAtlasSource_ajshl")
+
+[node name="Test_World" type="Node2D" unique_id=84581027 node_paths=PackedStringArray("tile_map", "infrastructure_tilemap", "housing_tilemap", "selection_tilemap", "player")]
 script = ExtResource("1_iyx0m")
 tile_map = NodePath("Ground")
 infrastructure_tilemap = NodePath("Infastructure")
 housing_tilemap = NodePath("Structures")
+selection_tilemap = NodePath("Selection")
 player = NodePath("playerCam")
 city_marker_scene = SubResource("PackedScene_ajshl")
 
@@ -143,10 +223,13 @@ tile_set = SubResource("TileSet_gdkyt")
 [node name="Enviromental" type="TileMapLayer" parent="." unique_id=1841535565]
 
 [node name="Structures" type="TileMapLayer" parent="." unique_id=1232665113]
-tile_set = SubResource("TileSet_k3o8w")
+tile_set = SubResource("TileSet_ahhtf")
 
 [node name="Infastructure" type="TileMapLayer" parent="." unique_id=245553453]
-tile_set = SubResource("TileSet_74lek")
+tile_set = SubResource("TileSet_t44x1")
+
+[node name="Selection" type="TileMapLayer" parent="." unique_id=1283469471]
+tile_set = SubResource("TileSet_g10qd")
 
 [node name="playerCam" type="Camera2D" parent="." unique_id=592935089]
 zoom = Vector2(2, 2)

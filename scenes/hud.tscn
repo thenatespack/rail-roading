@@ -7,6 +7,7 @@ Label/font_sizes/font_size = 32
 
 [node name="HUD" type="CanvasLayer" unique_id=415926885]
 script = ExtResource("1_ahhtf")
+player_type = 1
 
 [node name="Debug" type="Control" parent="." unique_id=1249309344]
 layout_mode = 3
@@ -35,6 +36,9 @@ text = "FPS:"
 layout_mode = 2
 text = "RAM:"
 
+[node name="PopulationLabel" type="Label" parent="Debug/VBoxContainer" unique_id=1940756923]
+layout_mode = 2
+
 [node name="Control" type="Control" parent="." unique_id=276003443]
 layout_mode = 3
 anchors_preset = 7
@@ -48,36 +52,88 @@ offset_right = 250.5
 grow_horizontal = 2
 grow_vertical = 0
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Control" unique_id=1246266336]
+[node name="VBoxContainer" type="VBoxContainer" parent="Control" unique_id=195165963]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
 anchor_bottom = 1.0
+offset_left = -166.0
+offset_top = -127.0
+offset_right = 166.0
 grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 16
+grow_vertical = 0
 
-[node name="RoadsButton" type="Button" parent="Control/HBoxContainer" unique_id=603593274 groups=["DOT"]]
+[node name="HBoxContainer" type="HBoxContainer" parent="Control/VBoxContainer" unique_id=1246266336]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="RoadsButton" type="Button" parent="Control/VBoxContainer/HBoxContainer" unique_id=603593274 groups=["DOT"]]
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 2
 text = "Roads"
 
-[node name="TracksButton" type="Button" parent="Control/HBoxContainer" unique_id=428552937 groups=["TA"]]
+[node name="TracksButton" type="Button" parent="Control/VBoxContainer/HBoxContainer" unique_id=428552937 groups=["TA"]]
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 2
 text = "Tracks"
 
-[node name="TracksButton3" type="Button" parent="Control/HBoxContainer" unique_id=1749766453]
+[node name="TracksButton3" type="Button" parent="Control/VBoxContainer/HBoxContainer" unique_id=1749766453]
 visible = false
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 2
 text = "Tracks"
 
-[node name="StationsButton" type="Button" parent="Control/HBoxContainer" unique_id=910544896 groups=["TA"]]
+[node name="StationsButton" type="Button" parent="Control/VBoxContainer/HBoxContainer" unique_id=910544896 groups=["TA"]]
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 2
 text = "Stations"
 
-[connection signal="pressed" from="Control/HBoxContainer/RoadsButton" to="." method="_on_roads_button_pressed"]
-[connection signal="pressed" from="Control/HBoxContainer/TracksButton" to="." method="_on_tracks_button_pressed"]
-[connection signal="pressed" from="Control/HBoxContainer/StationsButton" to="." method="_on_stations_button_pressed"]
+[node name="RemoveButton" type="Button" parent="Control/VBoxContainer/HBoxContainer" unique_id=477098493]
+layout_mode = 2
+text = " Remove "
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="Control/VBoxContainer" unique_id=1833568232]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="IncomeLabel" type="Label" parent="Control/VBoxContainer/HBoxContainer2" unique_id=644512725]
+layout_mode = 2
+text = "Income:"
+
+[node name="ExpensesLabel" type="Label" parent="Control/VBoxContainer/HBoxContainer2" unique_id=377216147]
+layout_mode = 2
+text = "Expenses:"
+
+[node name="BalanceLabel" type="Label" parent="Control/VBoxContainer/HBoxContainer2" unique_id=2136369058]
+layout_mode = 2
+text = "Balance:"
+
+[node name="VSeparator" type="VSeparator" parent="Control/VBoxContainer/HBoxContainer2" unique_id=532372616]
+layout_mode = 2
+
+[node name="PopulationLabel" type="Label" parent="Control/VBoxContainer/HBoxContainer2" unique_id=1801440433]
+layout_mode = 2
+text = "Population: 0 (+0)"
+
+[node name="VSeparator2" type="VSeparator" parent="Control/VBoxContainer/HBoxContainer2" unique_id=1500032927]
+layout_mode = 2
+
+[node name="ApprovalLabel" type="Label" parent="Control/VBoxContainer/HBoxContainer2" unique_id=117251440]
+layout_mode = 2
+text = "Approval Rating:"
+
+[node name="VSeparator3" type="VSeparator" parent="Control/VBoxContainer/HBoxContainer2" unique_id=1112813413]
+layout_mode = 2
+
+[node name="TimeLabel" type="Label" parent="Control/VBoxContainer/HBoxContainer2" unique_id=1630537874]
+layout_mode = 2
+text = "TIME: 10/26/25 3:22pm"
+
+[connection signal="pressed" from="Control/VBoxContainer/HBoxContainer/RoadsButton" to="." method="_on_roads_button_pressed"]
+[connection signal="pressed" from="Control/VBoxContainer/HBoxContainer/TracksButton" to="." method="_on_tracks_button_pressed"]
+[connection signal="pressed" from="Control/VBoxContainer/HBoxContainer/StationsButton" to="." method="_on_stations_button_pressed"]
+[connection signal="pressed" from="Control/VBoxContainer/HBoxContainer/RemoveButton" to="." method="_on_remove_button_pressed"]

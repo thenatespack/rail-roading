@@ -10,6 +10,16 @@ shader_parameter/heart_color = Color(1, 0.2, 0.2, 1)
 shader_parameter/influence_radius = 0.4
 shader_parameter/influence_color = Color(0.2, 0.5, 1, 0.5)
 shader_parameter/aa_width = 0.01
+shader_parameter/show_zones = true
+shader_parameter/zone_seed_i = 0
+shader_parameter/cell_size = 4
+shader_parameter/zone_split_a = 512
+shader_parameter/zone_split_b = 819
+shader_parameter/zone_rect_tiles = 16.0
+shader_parameter/zone_opacity = 0.75
+shader_parameter/residential_color = Color(0.25, 0.75, 0.3, 1)
+shader_parameter/commercial_color = Color(0.3, 0.55, 1, 1)
+shader_parameter/industrial_color = Color(0.95, 0.75, 0.2, 1)
 
 [node name="CityMarker" type="Node2D" unique_id=765892303]
 script = ExtResource("1_k3o8w")

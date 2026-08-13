@@ -2,7 +2,7 @@ extends CanvasLayer
 
 enum PlayerType { TA, DOT, BOTH }
 
-enum BuildingType {ROAD, RAIL, STATION}
+enum BuildingType {ROAD, RAIL, STATION, DEMOLISH}
 
 @export var player_type: PlayerType = PlayerType.BOTH
 
@@ -34,6 +34,10 @@ func update_money(money: float):
 	$Debug/VBoxContainer/Money.text ="Money: $"+ str(money)
 
 
+func update_population(population: int) -> void:
+	$Debug/VBoxContainer/PopulationLabel.text = "Population: %d" % population
+
+
 func _on_roads_button_pressed() -> void:
 	emit_signal("build_time",BuildingType.ROAD)
 
@@ -44,3 +48,7 @@ func _on_tracks_button_pressed() -> void:
 
 func _on_stations_button_pressed() -> void:
 	emit_signal("build_time",BuildingType.STATION)
+
+
+func _on_remove_button_pressed() -> void:
+	emit_signal("build_time", BuildingType.DEMOLISH)
